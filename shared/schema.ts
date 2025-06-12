@@ -8,11 +8,16 @@ export const downloadRequestSchema = z.object({
     },
     "Le lien doit être un lien TikTok valide"
   ),
+  quality: z.enum(["auto", "4k", "hd", "sd"]).default("auto"),
+  type: z.enum(["video", "audio"]).default("video"),
 });
 
 export const downloadResponseSchema = z.object({
   success: z.boolean(),
   downloadUrl: z.string().url().optional(),
+  audioUrl: z.string().url().optional(),
+  quality: z.string().optional(),
+  type: z.enum(["video", "audio"]).optional(),
   error: z.string().optional(),
 });
 
