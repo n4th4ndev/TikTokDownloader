@@ -58,7 +58,7 @@ app.use((req, res, next) => {
 
   // Serve the app on port 3000 instead of 5000 to avoid conflicts
   // this serves both the API and the client.
-  const port = 3000;
+  const port = 3001;
   server.listen({
     port,
     host: "0.0.0.0",
