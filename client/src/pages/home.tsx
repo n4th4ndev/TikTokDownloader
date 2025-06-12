@@ -3,6 +3,7 @@ import ResultSection from "@/components/result-section";
 import FeaturesSection from "@/components/features-section";
 import InstructionsSection from "@/components/instructions-section";
 import { useState } from "react";
+import { Link } from "wouter";
 import type { DownloadResponse } from "@shared/schema";
 
 export default function Home() {
@@ -99,15 +100,15 @@ export default function Home() {
             </div>
             
             <div className="flex justify-center space-x-6 text-sm text-gray-500">
-              <a href="#" className="hover:text-gray-700 transition-colors">
+              <Link href="/terms-of-service" className="hover:text-gray-700 transition-colors">
                 Conditions d'utilisation
-              </a>
-              <a href="#" className="hover:text-gray-700 transition-colors">
+              </Link>
+              <Link href="/privacy-policy" className="hover:text-gray-700 transition-colors">
                 Politique de confidentialité
-              </a>
-              <a href="#" className="hover:text-gray-700 transition-colors">
+              </Link>
+              <Link href="/contact" className="hover:text-gray-700 transition-colors">
                 Contact
-              </a>
+              </Link>
             </div>
           </div>
         </div>
