@@ -25,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         const response = downloadResponseSchema.parse({
           success: false,
-          error: "Impossible de traiter cette vidéo. Vérifiez que le lien est correct et que la vidéo est publique.",
+          error: "Services de téléchargement temporairement indisponibles. Les plateformes comme TikTok changent fréquemment leurs protections. Veuillez réessayer dans quelques minutes ou utiliser un lien de test avec 'demo' dans l'URL.",
         });
         res.json(response);
       }
@@ -53,71 +53,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 async function getDownloadUrl(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
-  try {
-    // Try ttdownloader.com first
-    const ttdownloaderResult = await tryTTDownloader(tiktokUrl, quality, type);
-    if (ttdownloaderResult.success) return ttdownloaderResult;
+  const services = [
+    { name: 'TTDownloader', fn: tryTTDownloader },
+    { name: 'Snaptik', fn: trySnaptik },
+    { name: 'SSSTik', fn: trySSSTik },
+    { name: 'TikMate', fn: tryTikMate },
+  ];
 
-    // Fallback to snaptik.app
-    const snaptikResult = await trySnaptik(tiktokUrl, quality, type);
-    if (snaptikResult.success) return snaptikResult;
-
-    return { success: false };
-  } catch (error) {
-    console.error("Error getting download URL:", error);
-    return { success: false };
+  for (const service of services) {
+    try {
+      console.log(`Trying ${service.name}...`);
+      const result = await service.fn(tiktokUrl, quality, type);
+      if (result.success) {
+        console.log(`Success with ${service.name}`);
+        return result;
+      }
+    } catch (error) {
+      console.error(`${service.name} failed:`, error);
+      continue;
+    }
   }
+
+  return { success: false };
 }
 
 async function tryTTDownloader(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
   try {
-    const response = await fetch("https://ttdownloader.com/", {
+    const formData = new URLSearchParams();
+    formData.append('url', tiktokUrl);
+    
+    const response = await fetch("https://www.tikwm.com/api/", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
-      body: `url=${encodeURIComponent(tiktokUrl)}`,
+      body: formData.toString(),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const html = await response.text();
+    const data = await response.json();
     
-    if (type === "audio") {
-      // Look for audio download links
-      const audioMatch = html.match(/href="([^"]*\.mp3[^"]*)"/i) || html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?audio.*?<\/a>/i);
-      if (audioMatch && audioMatch[1]) {
+    if (data.code === 0 && data.data) {
+      if (type === "audio" && data.data.music) {
         return {
           success: true,
-          audioUrl: audioMatch[1],
+          audioUrl: data.data.music,
           quality: "audio"
         };
-      }
-    } else {
-      // Look for video download links based on quality
-      let downloadMatch;
-      
-      if (quality === "4k") {
-        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(4k|2160p|uhd)/i);
-      } else if (quality === "hd") {
-        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(hd|1080p|high)/i);
-      } else if (quality === "sd") {
-        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(sd|720p|low)/i);
-      }
-      
-      // Fallback to any video link
-      if (!downloadMatch) {
-        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>Download<\/a>/i) || 
-                      html.match(/href="([^"]*\.mp4[^"]*)"/i);
-      }
-      
-      if (downloadMatch && downloadMatch[1]) {
+      } else if (type === "video" && data.data.play) {
+        let videoUrl = data.data.play;
+        
+        // Try to get HD version if available
+        if (quality === "hd" && data.data.hdplay) {
+          videoUrl = data.data.hdplay;
+        }
+        
         return {
           success: true,
-          downloadUrl: downloadMatch[1],
+          downloadUrl: videoUrl,
           quality: quality
         };
       }
@@ -125,18 +122,115 @@ async function tryTTDownloader(tiktokUrl: string, quality: string, type: string)
 
     return { success: false };
   } catch (error) {
-    console.error("TTDownloader error:", error);
+    console.error("TikWM API error:", error);
     return { success: false };
   }
 }
 
 async function trySnaptik(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
   try {
-    const response = await fetch("https://snaptik.app/abc2.php", {
+    const response = await fetch("https://api.tiklydown.eu.org/api/download", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+      body: JSON.stringify({ url: tiktokUrl }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.status === "success" && data.result) {
+      if (type === "audio" && data.result.audio) {
+        return {
+          success: true,
+          audioUrl: data.result.audio,
+          quality: "audio"
+        };
+      } else if (type === "video") {
+        let videoUrl = data.result.video;
+        
+        // Try different quality options if available
+        if (quality === "hd" && data.result.video_hd) {
+          videoUrl = data.result.video_hd;
+        } else if (quality === "4k" && data.result.video_4k) {
+          videoUrl = data.result.video_4k;
+        }
+        
+        return {
+          success: true,
+          downloadUrl: videoUrl,
+          quality: quality
+        };
+      }
+    }
+
+    return { success: false };
+  } catch (error) {
+    console.error("TiklyDown API error:", error);
+    return { success: false };
+  }
+}
+
+async function trySSSTik(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
+  try {
+    const response = await fetch("https://api.cobalt.tools/api/json", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
+      body: JSON.stringify({
+        url: tiktokUrl,
+        vQuality: quality === "4k" ? "max" : quality === "hd" ? "720" : "480",
+        vFormat: "mp4",
+        isAudioOnly: type === "audio",
+        aFormat: "mp3"
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.status === "success" || data.status === "stream") {
+      if (type === "audio" && data.url) {
+        return {
+          success: true,
+          audioUrl: data.url,
+          quality: "audio"
+        };
+      } else if (type === "video" && data.url) {
+        return {
+          success: true,
+          downloadUrl: data.url,
+          quality: quality
+        };
+      }
+    }
+
+    return { success: false };
+  } catch (error) {
+    console.error("Cobalt Tools API error:", error);
+    return { success: false };
+  }
+}
+
+async function tryTikMate(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
+  try {
+    const response = await fetch("https://tikmate.online/download", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://tikmate.online/",
       },
       body: `url=${encodeURIComponent(tiktokUrl)}`,
     });
@@ -148,8 +242,8 @@ async function trySnaptik(tiktokUrl: string, quality: string, type: string): Pro
     const html = await response.text();
     
     if (type === "audio") {
-      // Look for audio download links
-      const audioMatch = html.match(/href="([^"]*\.mp3[^"]*)"/i) || html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?audio.*?<\/a>/i);
+      const audioMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?audio.*?<\/a>/i) ||
+                        html.match(/href="([^"]*\.mp3[^"]*)"/i);
       if (audioMatch && audioMatch[1]) {
         return {
           success: true,
@@ -158,21 +252,17 @@ async function trySnaptik(tiktokUrl: string, quality: string, type: string): Pro
         };
       }
     } else {
-      // Look for video download links based on quality
       let downloadMatch;
       
       if (quality === "4k") {
-        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(4k|2160p|uhd)/i);
+        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?(4k|uhd|2160p).*?<\/a>/i);
       } else if (quality === "hd") {
-        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(hd|1080p|high)/i);
-      } else if (quality === "sd") {
-        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(sd|720p|low)/i);
+        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?(hd|1080p).*?<\/a>/i);
       }
       
-      // Fallback to any video link
       if (!downloadMatch) {
-        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*download[^>]*>/i) || 
-                      html.match(/href="([^"]*\.mp4[^"]*)"/i);
+        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?download.*?<\/a>/i) ||
+                       html.match(/href="([^"]*\.mp4[^"]*)"/i);
       }
       
       if (downloadMatch && downloadMatch[1]) {
@@ -186,7 +276,7 @@ async function trySnaptik(tiktokUrl: string, quality: string, type: string): Pro
 
     return { success: false };
   } catch (error) {
-    console.error("Snaptik error:", error);
+    console.error("TikMate error:", error);
     return { success: false };
   }
 }
