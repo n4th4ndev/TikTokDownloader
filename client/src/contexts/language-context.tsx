@@ -41,6 +41,8 @@ const translations = {
     "result.success.title": "Vidéo prête au téléchargement !",
     "result.success.description": "Votre vidéo TikTok sans filigrane est maintenant disponible au téléchargement.",
     "result.success.button": "Télécharger maintenant",
+    "result.copy": "Copier le lien",
+    "result.copied": "Lien copié !",
     "result.error.title": "Erreur lors du téléchargement",
     "result.error.button": "Réessayer",
     
@@ -118,6 +120,8 @@ const translations = {
     "result.success.title": "Video ready for download!",
     "result.success.description": "Your TikTok video without watermark is now available for download.",
     "result.success.button": "Download now",
+    "result.copy": "Copy link",
+    "result.copied": "Link copied!",
     "result.error.title": "Download error",
     "result.error.button": "Try again",
     

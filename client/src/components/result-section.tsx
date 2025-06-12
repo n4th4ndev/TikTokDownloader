@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/language-context";
 import type { DownloadResponse } from "@shared/schema";
+import { Copy, Download, RotateCcw, CheckCircle, XCircle } from "lucide-react";
 
 interface ResultSectionProps {
   result: DownloadResponse | null;
