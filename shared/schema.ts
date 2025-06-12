@@ -23,3 +23,7 @@ export const downloadResponseSchema = z.object({
 
 export type DownloadRequest = z.infer<typeof downloadRequestSchema>;
 export type DownloadResponse = z.infer<typeof downloadResponseSchema>;
+
+// Types partagés pour la gestion des utilisateurs (backend mock)
+export type User = { id: number; username: string };
+export type InsertUser = Omit<User, "id">;
