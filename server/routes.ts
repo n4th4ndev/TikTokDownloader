@@ -225,50 +225,36 @@ async function trySSSTik(tiktokUrl: string, quality: string, type: string): Prom
 
 async function tryTikMate(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
   try {
-    const response = await fetch("https://tikmate.online/download", {
+    const response = await fetch("https://api.savepin.app/download", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": "https://tikmate.online/",
       },
-      body: `url=${encodeURIComponent(tiktokUrl)}`,
+      body: JSON.stringify({ 
+        url: tiktokUrl,
+        type: type === "audio" ? "audio" : "video",
+        quality: quality
+      }),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const html = await response.text();
+    const data = await response.json();
     
-    if (type === "audio") {
-      const audioMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?audio.*?<\/a>/i) ||
-                        html.match(/href="([^"]*\.mp3[^"]*)"/i);
-      if (audioMatch && audioMatch[1]) {
+    if (data.success && data.data) {
+      if (type === "audio" && data.data.audio_url) {
         return {
           success: true,
-          audioUrl: audioMatch[1],
+          audioUrl: data.data.audio_url,
           quality: "audio"
         };
-      }
-    } else {
-      let downloadMatch;
-      
-      if (quality === "4k") {
-        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?(4k|uhd|2160p).*?<\/a>/i);
-      } else if (quality === "hd") {
-        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?(hd|1080p).*?<\/a>/i);
-      }
-      
-      if (!downloadMatch) {
-        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?download.*?<\/a>/i) ||
-                       html.match(/href="([^"]*\.mp4[^"]*)"/i);
-      }
-      
-      if (downloadMatch && downloadMatch[1]) {
+      } else if (type === "video" && data.data.video_url) {
         return {
           success: true,
-          downloadUrl: downloadMatch[1],
+          downloadUrl: data.data.video_url,
           quality: quality
         };
       }
@@ -276,7 +262,7 @@ async function tryTikMate(tiktokUrl: string, quality: string, type: string): Pro
 
     return { success: false };
   } catch (error) {
-    console.error("TikMate error:", error);
+    console.error("SavePin API error:", error);
     return { success: false };
   }
 }
