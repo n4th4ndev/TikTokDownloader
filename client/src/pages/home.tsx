@@ -31,8 +31,8 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              <i className="fab fa-tiktok text-black mr-3"></i>
-              TikTok Downloader
+              <i className="fas fa-video text-blue-600 mr-3"></i>
+              Video Downloader
             </h1>
             <p className="text-gray-600 text-lg">
               Téléchargez vos vidéos TikTok préférées sans filigrane
@@ -80,8 +80,24 @@ export default function Home() {
           <div className="text-center">
             <p className="text-gray-600 mb-4">
               <i className="fas fa-heart text-red-500 mr-1"></i>
-              Fait avec amour pour la communauté TikTok
+              Service gratuit de téléchargement de vidéos
             </p>
+            
+            {/* Disclaimer légal */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 text-sm text-gray-600">
+              <p className="mb-2">
+                <i className="fas fa-info-circle text-gray-500 mr-1"></i>
+                <strong>Avertissement légal :</strong>
+              </p>
+              <ul className="text-left space-y-1 max-w-2xl mx-auto">
+                <li>• Ce site n'est pas affilié à TikTok Inc. ou ByteDance Ltd.</li>
+                <li>• Nous n'hébergeons aucune vidéo sur nos serveurs</li>
+                <li>• Les vidéos téléchargées proviennent directement des serveurs de TikTok</li>
+                <li>• Respectez les droits d'auteur et les conditions d'utilisation de TikTok</li>
+                <li>• Utilisez ce service uniquement pour vos propres vidéos ou avec autorisation</li>
+              </ul>
+            </div>
+            
             <div className="flex justify-center space-x-6 text-sm text-gray-500">
               <a href="#" className="hover:text-gray-700 transition-colors">
                 Conditions d'utilisation

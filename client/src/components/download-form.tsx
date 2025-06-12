@@ -119,7 +119,7 @@ export default function DownloadForm({
                   disabled={isLoading}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <i className="fab fa-tiktok text-gray-400"></i>
+                  <i className="fas fa-link text-gray-400"></i>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mt-2">
