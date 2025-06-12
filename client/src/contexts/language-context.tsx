@@ -168,20 +168,88 @@ const translations = {
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem("language");
-    if (saved === "en" || saved === "fr") return saved;
-    
-    // Auto-detect browser language
-    const browserLang = navigator.language.toLowerCase();
-    if (browserLang.startsWith("fr")) return "fr";
-    return "en";
-  });
+  const [language, setLanguage] = useState<Language>("en");
+  const [isDetecting, setIsDetecting] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem("language", language);
-    document.documentElement.lang = language;
-  }, [language]);
+    const detectLanguage = async () => {
+      // Check for saved preference first
+      const saved = localStorage.getItem("language");
+      if (saved === "en" || saved === "fr") {
+        setLanguage(saved);
+        setIsDetecting(false);
+        return;
+      }
+
+      try {
+        // Try to detect location via IP geolocation
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        
+        // French-speaking countries
+        const frenchCountries = ['FR', 'BE', 'CH', 'CA', 'LU', 'MC', 'CI', 'SN', 'ML', 'BF', 'NE', 'TD', 'CF', 'CG', 'GA', 'CM', 'DJ', 'KM', 'MG', 'SC', 'VU', 'NC', 'PF'];
+        
+        if (data.country_code && frenchCountries.includes(data.country_code)) {
+          setLanguage("fr");
+        } else {
+          // Fallback to browser language detection
+          const browserLang = navigator.language.toLowerCase();
+          if (browserLang.startsWith("fr")) {
+            setLanguage("fr");
+          } else {
+            setLanguage("en");
+          }
+        }
+      } catch (error) {
+        // Fallback to browser language if geolocation fails
+        const browserLang = navigator.language.toLowerCase();
+        if (browserLang.startsWith("fr")) {
+          setLanguage("fr");
+        } else {
+          setLanguage("en");
+        }
+      }
+      
+      setIsDetecting(false);
+    };
+
+    detectLanguage();
+  }, []);
+
+  useEffect(() => {
+    if (!isDetecting) {
+      localStorage.setItem("language", language);
+      document.documentElement.lang = language;
+      
+      // Update page title and meta description for SEO
+      const title = language === "fr" 
+        ? "Video Downloader - Téléchargeur de vidéos TikTok sans filigrane"
+        : "Video Downloader - Download TikTok videos without watermark";
+      
+      const description = language === "fr"
+        ? "Téléchargez vos vidéos TikTok préférées sans filigrane gratuitement. Service rapide et sécurisé pour sauvegarder vos contenus TikTok favoris."
+        : "Download your favorite TikTok videos without watermark for free. Fast and secure service to save your favorite TikTok content.";
+      
+      document.title = title;
+      
+      // Update meta description
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', description);
+      }
+      
+      // Update Open Graph tags
+      let ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) {
+        ogTitle.setAttribute('content', title);
+      }
+      
+      let ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) {
+        ogDesc.setAttribute('content', description);
+      }
+    }
+  }, [language, isDetecting]);
 
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations[typeof language]] || key;

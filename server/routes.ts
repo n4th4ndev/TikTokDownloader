@@ -8,15 +8,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/download", async (req, res) => {
     try {
       // Validate request body
-      const { url } = downloadRequestSchema.parse(req.body);
+      const { url, quality, type } = downloadRequestSchema.parse(req.body);
 
       // Try to get download URL from TikTok downloader service
-      const downloadUrl = await getDownloadUrl(url);
+      const result = await getDownloadUrl(url, quality, type);
 
-      if (downloadUrl) {
+      if (result.success) {
         const response = downloadResponseSchema.parse({
           success: true,
-          downloadUrl: downloadUrl,
+          downloadUrl: result.downloadUrl,
+          audioUrl: result.audioUrl,
+          quality: result.quality,
+          type: type,
         });
         res.json(response);
       } else {
@@ -49,24 +52,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-async function getDownloadUrl(tiktokUrl: string): Promise<string | null> {
+async function getDownloadUrl(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
   try {
     // Try ttdownloader.com first
-    const ttdownloaderUrl = await tryTTDownloader(tiktokUrl);
-    if (ttdownloaderUrl) return ttdownloaderUrl;
+    const ttdownloaderResult = await tryTTDownloader(tiktokUrl, quality, type);
+    if (ttdownloaderResult.success) return ttdownloaderResult;
 
     // Fallback to snaptik.app
-    const snaptikUrl = await trySnaptik(tiktokUrl);
-    if (snaptikUrl) return snaptikUrl;
+    const snaptikResult = await trySnaptik(tiktokUrl, quality, type);
+    if (snaptikResult.success) return snaptikResult;
 
-    return null;
+    return { success: false };
   } catch (error) {
     console.error("Error getting download URL:", error);
-    return null;
+    return { success: false };
   }
 }
 
-async function tryTTDownloader(tiktokUrl: string): Promise<string | null> {
+async function tryTTDownloader(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
   try {
     const response = await fetch("https://ttdownloader.com/", {
       method: "POST",
@@ -83,26 +86,51 @@ async function tryTTDownloader(tiktokUrl: string): Promise<string | null> {
 
     const html = await response.text();
     
-    // Parse HTML to extract download link
-    const downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>Download<\/a>/i);
-    if (downloadMatch && downloadMatch[1]) {
-      return downloadMatch[1];
+    if (type === "audio") {
+      // Look for audio download links
+      const audioMatch = html.match(/href="([^"]*\.mp3[^"]*)"/i) || html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?audio.*?<\/a>/i);
+      if (audioMatch && audioMatch[1]) {
+        return {
+          success: true,
+          audioUrl: audioMatch[1],
+          quality: "audio"
+        };
+      }
+    } else {
+      // Look for video download links based on quality
+      let downloadMatch;
+      
+      if (quality === "4k") {
+        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(4k|2160p|uhd)/i);
+      } else if (quality === "hd") {
+        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(hd|1080p|high)/i);
+      } else if (quality === "sd") {
+        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(sd|720p|low)/i);
+      }
+      
+      // Fallback to any video link
+      if (!downloadMatch) {
+        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*>Download<\/a>/i) || 
+                      html.match(/href="([^"]*\.mp4[^"]*)"/i);
+      }
+      
+      if (downloadMatch && downloadMatch[1]) {
+        return {
+          success: true,
+          downloadUrl: downloadMatch[1],
+          quality: quality
+        };
+      }
     }
 
-    // Alternative pattern matching
-    const videoMatch = html.match(/href="([^"]*\.mp4[^"]*)"/i);
-    if (videoMatch && videoMatch[1]) {
-      return videoMatch[1];
-    }
-
-    return null;
+    return { success: false };
   } catch (error) {
     console.error("TTDownloader error:", error);
-    return null;
+    return { success: false };
   }
 }
 
-async function trySnaptik(tiktokUrl: string): Promise<string | null> {
+async function trySnaptik(tiktokUrl: string, quality: string, type: string): Promise<{success: boolean, downloadUrl?: string, audioUrl?: string, quality?: string}> {
   try {
     const response = await fetch("https://snaptik.app/abc2.php", {
       method: "POST",
@@ -119,21 +147,46 @@ async function trySnaptik(tiktokUrl: string): Promise<string | null> {
 
     const html = await response.text();
     
-    // Parse HTML to extract download link
-    const downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*download[^>]*>/i);
-    if (downloadMatch && downloadMatch[1]) {
-      return downloadMatch[1];
+    if (type === "audio") {
+      // Look for audio download links
+      const audioMatch = html.match(/href="([^"]*\.mp3[^"]*)"/i) || html.match(/<a[^>]+href="([^"]+)"[^>]*>.*?audio.*?<\/a>/i);
+      if (audioMatch && audioMatch[1]) {
+        return {
+          success: true,
+          audioUrl: audioMatch[1],
+          quality: "audio"
+        };
+      }
+    } else {
+      // Look for video download links based on quality
+      let downloadMatch;
+      
+      if (quality === "4k") {
+        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(4k|2160p|uhd)/i);
+      } else if (quality === "hd") {
+        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(hd|1080p|high)/i);
+      } else if (quality === "sd") {
+        downloadMatch = html.match(/href="([^"]*\.mp4[^"]*)"[^>]*.*?(sd|720p|low)/i);
+      }
+      
+      // Fallback to any video link
+      if (!downloadMatch) {
+        downloadMatch = html.match(/<a[^>]+href="([^"]+)"[^>]*download[^>]*>/i) || 
+                      html.match(/href="([^"]*\.mp4[^"]*)"/i);
+      }
+      
+      if (downloadMatch && downloadMatch[1]) {
+        return {
+          success: true,
+          downloadUrl: downloadMatch[1],
+          quality: quality
+        };
+      }
     }
 
-    // Alternative pattern matching
-    const videoMatch = html.match(/href="([^"]*\.mp4[^"]*)"/i);
-    if (videoMatch && videoMatch[1]) {
-      return videoMatch[1];
-    }
-
-    return null;
+    return { success: false };
   } catch (error) {
     console.error("Snaptik error:", error);
-    return null;
+    return { success: false };
   }
 }
