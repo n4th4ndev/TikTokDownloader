@@ -22,7 +22,10 @@ export default function DownloadForm({
   isLoading,
 }: DownloadFormProps) {
   const [url, setUrl] = useState("");
+  const [quality, setQuality] = useState<"auto" | "4k" | "hd" | "sd">("auto");
+  const [type, setType] = useState<"video" | "audio">("video");
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const downloadMutation = useMutation({
     mutationFn: async (data: DownloadRequest) => {
@@ -33,12 +36,12 @@ export default function DownloadForm({
       onDownloadComplete(data);
       if (data.success) {
         toast({
-          title: "Succès",
-          description: "Vidéo prête au téléchargement !",
+          title: t("toast.success.title"),
+          description: t("toast.success.description"),
         });
       } else {
         toast({
-          title: "Erreur",
+          title: t("toast.error.title"),
           description: data.error || "Une erreur est survenue",
           variant: "destructive",
         });
@@ -48,11 +51,11 @@ export default function DownloadForm({
       console.error("Download error:", error);
       onDownloadComplete({
         success: false,
-        error: "Erreur de connexion. Veuillez réessayer plus tard.",
+        error: t("toast.error.connection"),
       });
       toast({
-        title: "Erreur",
-        description: "Erreur de connexion. Veuillez réessayer plus tard.",
+        title: t("toast.error.title"),
+        description: t("toast.error.connection"),
         variant: "destructive",
       });
     },
@@ -64,8 +67,8 @@ export default function DownloadForm({
     const trimmedUrl = url.trim();
     if (!trimmedUrl) {
       toast({
-        title: "Erreur",
-        description: "Veuillez entrer un lien TikTok valide.",
+        title: t("toast.error.title"),
+        description: t("toast.error.url"),
         variant: "destructive",
       });
       return;
@@ -74,15 +77,15 @@ export default function DownloadForm({
     const tiktokRegex = /^https?:\/\/(www\.)?(tiktok\.com|vm\.tiktok\.com)/i;
     if (!tiktokRegex.test(trimmedUrl)) {
       toast({
-        title: "Erreur",
-        description: "Le lien fourni ne semble pas être un lien TikTok valide.",
+        title: t("toast.error.title"),
+        description: t("toast.error.invalid"),
         variant: "destructive",
       });
       return;
     }
 
     onDownloadStart();
-    downloadMutation.mutate({ url: trimmedUrl });
+    downloadMutation.mutate({ url: trimmedUrl, quality, type });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,14 +107,14 @@ export default function DownloadForm({
             {/* URL Input */}
             <div>
               <Label htmlFor="tiktokUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                Lien de la vidéo TikTok
+                {t("form.label")}
               </Label>
               <div className="relative">
                 <Input
                   type="url"
                   id="tiktokUrl"
                   name="tiktokUrl"
-                  placeholder="https://www.tiktok.com/@username/video/..."
+                  placeholder={t("form.placeholder")}
                   value={url}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 ${
@@ -126,7 +129,83 @@ export default function DownloadForm({
               </div>
               <p className="text-sm text-gray-500 mt-2">
                 <i className="fas fa-info-circle mr-1"></i>
-                Assurez-vous que le lien commence par https://www.tiktok.com/
+                {t("form.info")}
+              </p>
+            </div>
+
+            {/* Download Type Selection */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="downloadType" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("form.type")}
+                </Label>
+                <Select value={type} onValueChange={(value: "video" | "audio") => setType(value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">
+                      <span className="flex items-center">
+                        <i className="fas fa-video mr-2 text-blue-600"></i>
+                        {t("form.type.video")}
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="audio">
+                      <span className="flex items-center">
+                        <i className="fas fa-music mr-2 text-green-600"></i>
+                        {t("form.type.audio")}
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="videoQuality" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("form.quality")}
+                </Label>
+                <Select value={quality} onValueChange={(value: "auto" | "4k" | "hd" | "sd") => setQuality(value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">
+                      <span className="flex items-center">
+                        <i className="fas fa-magic mr-2 text-purple-600"></i>
+                        {t("form.quality.auto")}
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="4k">
+                      <span className="flex items-center">
+                        <i className="fas fa-crown mr-2 text-yellow-600"></i>
+                        {t("form.quality.4k")}
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="hd">
+                      <span className="flex items-center">
+                        <i className="fas fa-gem mr-2 text-blue-600"></i>
+                        {t("form.quality.hd")}
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="sd">
+                      <span className="flex items-center">
+                        <i className="fas fa-play mr-2 text-gray-600"></i>
+                        {t("form.quality.sd")}
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Quality Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                <i className="fas fa-info-circle mr-1"></i>
+                {type === "audio" 
+                  ? "Mode audio : Seul le son de la vidéo sera téléchargé (MP3)"
+                  : `Qualité ${quality === "4k" ? "4K Ultra HD" : quality === "hd" ? "HD 1080p" : quality === "sd" ? "SD 720p" : "automatique"} sélectionnée`
+                }
               </p>
             </div>
 
@@ -139,14 +218,14 @@ export default function DownloadForm({
               <span className="flex items-center justify-center space-x-2">
                 <span>
                   {isLoading || downloadMutation.isPending
-                    ? "Traitement..."
-                    : "Télécharger la vidéo"}
+                    ? t("form.processing")
+                    : t("form.button")}
                 </span>
                 <i
                   className={
                     isLoading || downloadMutation.isPending
                       ? "fas fa-spinner fa-spin"
-                      : "fas fa-arrow-right"
+                      : type === "audio" ? "fas fa-music" : "fas fa-download"
                   }
                 ></i>
               </span>
@@ -160,10 +239,10 @@ export default function DownloadForm({
         <div className="mt-6 text-center mb-8">
           <div className="inline-flex items-center space-x-3 text-blue-600">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="font-medium">Traitement en cours...</span>
+            <span className="font-medium">{t("form.loading")}</span>
           </div>
           <p className="text-gray-500 text-sm mt-2">
-            Récupération du lien de téléchargement
+            {t("form.loading.description")}
           </p>
         </div>
       )}
