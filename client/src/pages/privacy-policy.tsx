@@ -137,13 +137,13 @@ export default function PrivacyPolicy() {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Contact</h2>
               <p className="text-gray-700 mb-4">
                 Pour toute question concernant cette politique de confidentialité ou 
-                l'exercice de vos droits, contactez-nous :
+                l'exercice de vos droits, contactez-nous via notre formulaire de contact.
               </p>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <p className="text-gray-700">
-                  <strong>Email :</strong> privacy@videodownloader.com<br />
-                  <strong>Adresse :</strong> À définir selon votre localisation<br />
-                  <strong>Délégué à la protection des données :</strong> dpo@videodownloader.com
+                  <strong>Formulaire de contact :</strong> Disponible sur la page Contact<br />
+                  <strong>Délégué à la protection des données :</strong> Accessible via le formulaire<br />
+                  <strong>Réponse :</strong> Sous 48h pour les demandes liées au RGPD
                 </p>
               </div>
             </section>

@@ -147,12 +147,14 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact</h2>
               <p className="text-gray-700 mb-4">
-                Pour toute question concernant ces conditions d'utilisation :
+                Pour toute question concernant ces conditions d'utilisation, 
+                utilisez notre formulaire de contact disponible sur le site.
               </p>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <p className="text-gray-700">
-                  <strong>Email :</strong> legal@videodownloader.com<br />
-                  <strong>Adresse :</strong> À définir selon votre localisation
+                  <strong>Formulaire de contact :</strong> Disponible sur la page Contact<br />
+                  <strong>Questions juridiques :</strong> Précisez "Questions légales" dans le sujet<br />
+                  <strong>Réponse :</strong> Sous 48h pour les questions urgentes
                 </p>
               </div>
             </section>

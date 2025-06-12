@@ -163,11 +163,11 @@ export default function Contact() {
               <CardContent className="space-y-4">
                 <div className="flex items-start space-x-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i className="fas fa-envelope text-blue-600"></i>
+                    <i className="fas fa-comments text-blue-600"></i>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Email</h3>
-                    <p className="text-gray-600">support@videodownloader.com</p>
+                    <h3 className="font-medium text-gray-900">Formulaire de contact</h3>
+                    <p className="text-gray-600">Utilisez le formulaire ci-contre</p>
                     <p className="text-sm text-gray-500 mt-1">
                       Réponse sous 24-48h en moyenne
                     </p>
@@ -180,8 +180,8 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Horaires</h3>
-                    <p className="text-gray-600">Lundi - Vendredi</p>
-                    <p className="text-gray-600">9h00 - 18h00 (CET)</p>
+                    <p className="text-gray-600">Service disponible 24h/24</p>
+                    <p className="text-gray-600">Réponses en semaine</p>
                   </div>
                 </div>
 
@@ -191,9 +191,9 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Support technique</h3>
-                    <p className="text-gray-600">tech@videodownloader.com</p>
+                    <p className="text-gray-600">Problèmes techniques uniquement</p>
                     <p className="text-sm text-gray-500 mt-1">
-                      Pour les problèmes techniques uniquement
+                      Précisez votre navigateur et système
                     </p>
                   </div>
                 </div>
