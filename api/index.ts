@@ -51,7 +51,13 @@ let handler: any;
   });
 
   // In production, serve static files
-  serveStatic(app);
+  // Note: On Vercel, static files are served by Vercel itself
+  if (process.env.VERCEL) {
+    // Skip serving static files on Vercel as they're handled by Vercel's routing
+    console.log('Running on Vercel - static files will be served by Vercel');
+  } else {
+    serveStatic(app);
+  }
   
   // Export the handler for Vercel
   handler = app;
