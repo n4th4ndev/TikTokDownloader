@@ -43,6 +43,8 @@ const translations = {
     "result.success.button": "Télécharger maintenant",
     "result.copy": "Copier le lien",
     "result.copied": "Lien copié !",
+    "result.preview.video": "Aperçu de la vidéo",
+    "result.preview.audio": "Aperçu audio",
     "result.error.title": "Erreur lors du téléchargement",
     "result.error.button": "Réessayer",
     
@@ -80,6 +82,7 @@ const translations = {
     
     // Toasts
     "toast.success.title": "Succès",
+    "toast.copy.description": "Le lien a été copié dans votre presse-papiers",
     "toast.success.description": "Vidéo prête au téléchargement !",
     "toast.error.title": "Erreur",
     "toast.error.url": "Veuillez entrer un lien TikTok valide.",
@@ -122,6 +125,8 @@ const translations = {
     "result.success.button": "Download now",
     "result.copy": "Copy link",
     "result.copied": "Link copied!",
+    "result.preview.video": "Video preview",
+    "result.preview.audio": "Audio preview",
     "result.error.title": "Download error",
     "result.error.button": "Try again",
     
@@ -159,6 +164,7 @@ const translations = {
     
     // Toasts
     "toast.success.title": "Success",
+    "toast.copy.description": "Link has been copied to your clipboard",
     "toast.success.description": "Video ready for download!",
     "toast.error.title": "Error",
     "toast.error.url": "Please enter a valid TikTok link.",
